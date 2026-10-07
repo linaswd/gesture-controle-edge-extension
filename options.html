@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GestureControl — Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      color: #1a1a1a;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    .page { max-width: 640px; margin: 0 auto; padding: 40px 24px; }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .page-header p { font-size: 13px; color: #888; margin-top: 2px; }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      border: 1px solid #e8e8e8;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .card-header h2 { font-size: 14px; font-weight: 600; }
+    .card-header p { font-size: 12px; color: #888; margin-top: 3px; }
+
+    /* Gesture mapping rows */
+    .mapping-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 1fr 40px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f5f5f5;
+      transition: background 0.1s;
+    }
+    .mapping-row:last-child { border-bottom: none; }
+    .mapping-row:hover { background: #fafafa; }
+
+    .gesture-icon { font-size: 26px; text-align: center; }
+    .gesture-label { font-size: 13px; font-weight: 500; }
+    .gesture-sublabel { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+    .action-select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fafafa;
+      color: #1a1a1a;
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .action-select:focus { outline: none; border-color: #534AB7; box-shadow: 0 0 0 3px #534AB720; }
+
+    .delete-btn {
+      width: 28px; height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #ccc;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, background 0.15s;
+    }
+    .delete-btn:hover { color: #e24b4a; background: #fef2f2; }
+
+    /* Settings rows */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 13px; font-weight: 500; }
+    .setting-sub { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+    /* Toggle */
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle input { display: none; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #d0d0d0;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: #534AB7; }
+    .toggle input:checked + .toggle-slider::after { transform: translateX(18px); }
+
+    /* Slider */
+    input[type=range] {
+      width: 130px;
+      accent-color: #534AB7;
+    }
+    .slider-val { font-size: 12px; color: #888; min-width: 32px; text-align: right; }
+
+    /* Save button */
+    .btn-save {
+      width: 100%;
+      padding: 12px;
+      background: #534AB7;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-save:hover { background: #3C3489; }
+
+    .save-status {
+      text-align: center;
+      font-size: 12px;
+      color: #22c55e;
+      margin-top: 10px;
+      height: 16px;
+      transition: opacity 0.3s;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <span style="font-size:36px">✋</span>
+    <div>
+      <h1>GestureControl Settings</h1>
+      <p>Customize gestures and actions for each site</p>
+    </div>
+  </div>
+
+  <!-- Gesture Mapping -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Gesture → Action mapping</h2>
+      <p>Choose what each gesture does on this page</p>
+    </div>
+
+    <div id="mappingList">
+      <!-- Rows injected by JS -->
+    </div>
+  </div>
+
+  <!-- Behaviour settings -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Behaviour</h2>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Show gesture toast</div>
+        <div class="setting-sub">Display a small overlay when a gesture is detected</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="showToast" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Debounce delay</div>
+        <div class="setting-sub">Minimum time between repeated gestures</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="debounceSlider" min="300" max="2000" step="100" value="800" />
+        <span class="slider-val" id="debounceVal">800ms</span>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Confidence threshold</div>
+        <div class="setting-sub">Minimum model confidence to trigger an action</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="confSlider" min="50" max="99" step="1" value="75" />
+        <span class="slider-val" id="confVal">75%</span>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Mirror camera</div>
+        <div class="setting-sub">Flip video horizontally (recommended)</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="mirrorCamera" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <button class="btn-save" id="saveBtn">Save settings</button>
+  <div class="save-status" id="saveStatus"></div>
+
+</div>
+
+<script>
+const GESTURES = [
+  { id: "one_finger",   emoji: "☝️", label: "1 finger",  sub: "Index extended" },
+  { id: "two_fingers",  emoji: "✌️", label: "2 fingers", sub: "Index + middle" },
+  { id: "fist",         emoji: "✊", label: "Fist",        sub: "All fingers curled" },
+  { id: "open_hand",    emoji: "🤚", label: "Open hand",  sub: "All extended" },
+  { id: "thumbs_up",    emoji: "👍", label: "Thumbs up",  sub: "Thumb up, rest curled" },
+  { id: "three_fingers",emoji: "🤟", label: "3 fingers",  sub: "Index + middle + ring" },
+];
+
+const ACTIONS = [
+  { value: "none",             label: "— No action —" },
+  { value: "next",             label: "▶ Next slide / Forward" },
+  { value: "prev",             label: "◀ Previous slide / Back" },
+  { value: "pause",            label: "⏸ Pause / Play" },
+  { value: "fullscreen",       label: "⛶ Toggle Fullscreen" },
+  { value: "like",             label: "👍 Like (YouTube)" },
+  { value: "scroll_down",      label: "↓ Scroll Down" },
+  { value: "scroll_up",        label: "↑ Scroll Up" },
+  { value: "mute",             label: "🔇 Mute (Meet/Zoom)" },
+  { value: "camera_toggle",    label: "📷 Toggle Camera (Meet)" },
+  { value: "skip_forward",     label: "⏭ Skip +30s" },
+  { value: "skip_back",        label: "⏮ Skip -10s" },
+  { value: "volume_up",        label: "🔊 Volume Up" },
+  { value: "volume_down",      label: "🔉 Volume Down" },
+];
+
+const DEFAULT_MAPPINGS = {
+  one_finger:    "next",
+  two_fingers:   "prev",
+  fist:          "pause",
+  open_hand:     "fullscreen",
+  thumbs_up:     "like",
+  three_fingers: "none",
+};
+
+// ─── Build mapping UI ─────────────────────────────────────────────────────────
+const list = document.getElementById("mappingList");
+
+function buildMappingRows(mappings) {
+  list.innerHTML = "";
+  GESTURES.forEach(g => {
+    const row = document.createElement("div");
+    row.className = "mapping-row";
+    row.dataset.id = g.id;
+
+    const currentAction = mappings[g.id] ?? "none";
+
+    const options = ACTIONS.map(a =>
+      `<option value="${a.value}" ${a.value === currentAction ? "selected" : ""}>${a.label}</option>`
+    ).join("");
+
+    row.innerHTML = `
+      <span class="gesture-icon">${g.emoji}</span>
+      <div>
+        <div class="gesture-label">${g.label}</div>
+        <div class="gesture-sublabel">${g.sub}</div>
+      </div>
+      <select class="action-select" data-gesture="${g.id}">${options}</select>
+      <button class="delete-btn" title="Reset" data-gesture="${g.id}">↺</button>
+    `;
+    list.appendChild(row);
+  });
+
+  // Reset buttons
+  list.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const sel = list.querySelector(`select[data-gesture="${btn.dataset.gesture}"]`);
+      sel.value = DEFAULT_MAPPINGS[btn.dataset.gesture] ?? "none";
+    });
+  });
+}
+
+// ─── Sliders ──────────────────────────────────────────────────────────────────
+const debounceSlider = document.getElementById("debounceSlider");
+const debounceVal = document.getElementById("debounceVal");
+debounceSlider.addEventListener("input", () => {
+  debounceVal.textContent = debounceSlider.value + "ms";
+});
+
+const confSlider = document.getElementById("confSlider");
+const confVal = document.getElementById("confVal");
+confSlider.addEventListener("input", () => {
+  confVal.textContent = confSlider.value + "%";
+});
+
+// ─── Load & Save ──────────────────────────────────────────────────────────────
+chrome.storage.local.get("gestureSettings", ({ gestureSettings }) => {
+  const settings = gestureSettings ?? {};
+  const mappings = settings.mappings ?? DEFAULT_MAPPINGS;
+  buildMappingRows(mappings);
+
+  if (settings.debounceMs)  { debounceSlider.value = settings.debounceMs;  debounceVal.textContent = settings.debounceMs + "ms"; }
+  if (settings.confidenceThreshold) { confSlider.value = settings.confidenceThreshold; confVal.textContent = settings.confidenceThreshold + "%"; }
+  if (settings.showToast !== undefined) document.getElementById("showToast").checked = settings.showToast;
+  if (settings.mirrorCamera !== undefined) document.getElementById("mirrorCamera").checked = settings.mirrorCamera;
+});
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const mappings = {};
+  list.querySelectorAll("select[data-gesture]").forEach(sel => {
+    mappings[sel.dataset.gesture] = sel.value;
+  });
+
+  const settings = {
+    mappings,
+    debounceMs: parseInt(debounceSlider.value),
+    confidenceThreshold: parseInt(confSlider.value),
+    showToast: document.getElementById("showToast").checked,
+    mirrorCamera: document.getElementById("mirrorCamera").checked,
+  };
+
+  chrome.storage.local.set({ gestureSettings: settings }, () => {
+    const status = document.getElementById("saveStatus");
+    status.textContent = "✓ Saved!";
+    status.style.opacity = 1;
+    setTimeout(() => { status.style.opacity = 0; }, 2000);
+  });
+});
+</script>
+</body>
+</html>
